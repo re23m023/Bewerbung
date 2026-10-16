@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Kette">
+<title>Bewerbungskette</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="theme-color" content="#16232A">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E9EEED; --surface:#F7F9F8; --ink:#16232A; --muted:#5A6B72; --line:#C9D3D2;
+  --link:#F2B600; --link-ink:#1A1400; --min:#F2B600; --miss:#C2410C; --good:#0F766E; --focus:#0F5F8C;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#11191D; --surface:#1A252B; --ink:#E4EBEC; --muted:#93A4AA; --line:#2E3D44;
+    --link:#F2B600; --link-ink:#1A1400; --min:#F2B600; --miss:#F97316; --good:#2DD4BF; --focus:#7CC4F0;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11191D; --surface:#1A252B; --ink:#E4EBEC; --muted:#93A4AA; --line:#2E3D44;
+  --link:#F2B600; --link-ink:#1A1400; --min:#F2B600; --miss:#F97316; --good:#2DD4BF; --focus:#7CC4F0;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);
+  font-family:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:17px;line-height:1.45;-webkit-text-size-adjust:100%}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+main{max-width:560px;margin:0 auto;padding:16px 18px 104px}
+h1,h2,h3{margin:0;font-weight:700;line-height:1.15}
+h1{font-size:28px}
+h2{font-size:20px;margin-bottom:10px}
+.num{font-family:"Barlow Condensed","Barlow",system-ui,sans-serif;font-weight:700;letter-spacing:.01em}
+p{margin:0 0 10px}
+.muted{color:var(--muted)}
+.small{font-size:14px}
+section.view{display:none}
+section.view.on{display:block}
+.block{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:14px}
+.hero{padding:18px 16px}
+.hero .day{font-size:15px;color:var(--muted)}
+.hero .big{font-size:64px;line-height:.9;margin:6px 0 2px}
+.hero .of{font-size:22px;color:var(--muted)}
+.strip{display:flex;gap:4px;margin-top:14px;overflow:hidden}
+.strip span{flex:1;height:14px;border-radius:7px;border:2px solid var(--line)}
+.strip span.done{background:var(--link);border-color:var(--link)}
+.strip span.min{border-color:var(--min);background:repeating-linear-gradient(135deg,var(--min) 0 3px,transparent 3px 7px)}
+.strip span.miss{border-style:dashed;border-color:var(--miss)}
+.strip span.today{outline:2px solid var(--ink);outline-offset:1px}
+.task{font-size:20px;font-weight:600;margin:4px 0 6px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.spread{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+button,.btn{font:inherit;font-weight:600;border-radius:12px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);
+  padding:12px 16px;min-height:48px;cursor:pointer;touch-action:manipulation}
+button.primary{background:var(--link);border-color:var(--link);color:var(--link-ink)}
+button.quiet{border-color:var(--line);color:var(--muted)}
+button.danger{border-color:var(--miss);color:var(--miss)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+button:disabled{opacity:.45;cursor:default}
+.full{width:100%}
+.stack>*+*{margin-top:10px}
+label{display:block;font-size:14px;color:var(--muted);margin:10px 0 4px}
+input,select,textarea{font:inherit;width:100%;padding:11px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+textarea{min-height:84px;resize:vertical}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.counter{display:flex;align-items:center;gap:12px}
+.counter .n{font-size:44px;line-height:1}
+.notice{border-left:4px solid var(--miss);padding:10px 12px;background:var(--surface);border-radius:8px;margin-top:14px;font-size:15px}
+.ok{color:var(--good);font-weight:600}
+/* chain view */
+.chain{display:grid;grid-template-columns:repeat(7,1fr);gap:10px 4px;margin-top:6px}
+.wk{grid-column:1/-1;font-size:14px;color:var(--muted);margin-top:6px}
+.lk{position:relative;height:34px;border-radius:17px;border:3px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted);background:transparent;padding:0;min-height:0}
+.lk.done{background:var(--link);border-color:var(--link);color:var(--link-ink);font-weight:700}
+.lk.min{border-color:var(--min);color:var(--ink);background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--min) 55%,transparent) 0 3px,transparent 3px 7px)}
+.lk.miss{border-style:dashed;border-color:var(--miss);color:var(--miss)}
+.lk.today{outline:2px solid var(--ink);outline-offset:2px}
+.lk.future{opacity:.55}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--muted);margin-top:12px}
+.legend i{display:inline-block;width:22px;height:12px;border-radius:6px;border:2px solid var(--line);vertical-align:-1px;margin-right:6px}
+.legend i.d{background:var(--link);border-color:var(--link)}
+.legend i.m{border-color:var(--min);background:repeating-linear-gradient(135deg,var(--min) 0 2px,transparent 2px 5px)}
+.legend i.x{border-style:dashed;border-color:var(--miss)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.stats .num{font-size:34px;display:block;line-height:1}
+/* applications */
+.app{border-top:1px solid var(--line);padding:12px 0}
+.app:first-child{border-top:0}
+.app .t{font-weight:600}
+.chip{display:inline-block;font-size:13px;font-weight:600;border-radius:999px;padding:3px 10px;border:1.5px solid var(--line);color:var(--muted)}
+.chip.A{border-color:var(--ink);color:var(--ink)}
+.chip.due{border-color:var(--miss);color:var(--miss)}
+.app select{width:auto;padding:6px 8px;font-size:15px;min-height:40px}
+.tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;margin-top:6px}
+.bar b{display:block;height:100%;background:var(--good)}
+table{width:100%;border-collapse:collapse;font-size:15px}
+td,th{text-align:left;padding:8px 4px;border-top:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--muted)}
+/* tabs */
+nav{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom,0px)}
+nav .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+nav button{border:0;border-radius:0;min-height:58px;font-size:15px;color:var(--muted);background:transparent;position:relative}
+nav button[aria-current="page"]{color:var(--ink)}
+nav button[aria-current="page"]::after{content:"";position:absolute;left:28%;right:28%;top:0;height:3px;border-radius:0 0 3px 3px;background:var(--link)}
+.sync{font-size:13px;color:var(--muted);text-align:center;margin-top:22px}
+.gate{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;
+  background:color-mix(in srgb,var(--bg) 75%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.gate[hidden]{display:none}
+.gate-box{background:var(--surface);border:2px solid var(--miss);border-radius:16px;padding:20px;max-width:420px;width:100%}
+.gate-box>*+*{margin-top:12px}
+.gate-box h2{color:var(--miss)}
+@media (prefers-reduced-motion:no-preference){
+  .lk.done.just{animation:snap .5s ease-out}
+  @keyframes snap{0%{transform:scale(.6)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+}
+</style>
+</head>
+<body>
+<main>
+  <!-- HEUTE -->
+  <section class="view on" id="v-heute" aria-labelledby="h-heute">
+    <div class="block hero">
+      <div class="day" id="today-date"></div>
+      <h1 id="h-heute" class="sr">Heute</h1>
+      <div class="num big" id="streak">0</div>
+      <div class="of" id="streak-label">Glieder in Folge</div>
+      <div class="strip" id="strip" aria-hidden="true"></div>
+      <p class="small muted" id="day-of" style="margin-top:10px"></p>
+    </div>
+    <div id="warn"></div>
+    <div class="block" id="today-card"></div>
+    <div class="block">
+      <h2>Die Abendfrage</h2>
+      <p class="muted small">Was mache ich morgen ein kleines bisschen besser?</p>
+      <textarea id="evening" aria-label="Antwort auf die Abendfrage" placeholder="Zum Beispiel: Ansprechperson vorher anrufen"></textarea>
+    </div>
+    <div class="block" id="week-card"></div>
+  </section>
+
+  <!-- KETTE -->
+  <section class="view" id="v-kette" aria-labelledby="h-kette">
+    <h1 id="h-kette" style="margin-top:6px">Die Kette</h1>
+    <div class="block stats">
+      <div><span class="num" id="s-cur">0</span><span class="small muted">aktuelle Serie</span></div>
+      <div><span class="num" id="s-best">0</span><span class="small muted">längste Serie</span></div>
+      <div><span class="num" id="s-total">0</span><span class="small muted" id="s-of">von 78 Gliedern</span></div>
+    </div>
+    <div class="block">
+      <div class="chain" id="chain"></div>
+      <div class="legend">
+        <span><i class="d"></i>erledigt</span><span><i class="m"></i>Mindestversion</span><span><i class="x"></i>ausgelassen</span>
+      </div>
+      <p class="small muted" style="margin-top:10px">Tippe auf ein vergangenes Glied, um es nachzutragen oder zu korrigieren.</p>
+    </div>
+    <div class="block" id="day-edit" hidden></div>
+  </section>
+
+  <!-- BEWERBUNGEN -->
+  <section class="view" id="v-bew" aria-labelledby="h-bew">
+    <div class="spread" style="margin-top:6px"><h1 id="h-bew">Bewerbungen</h1><span class="num" style="font-size:28px" id="b-count">0/100</span></div>
+    <div class="block tiers" id="tiers"></div>
+    <div class="block">
+      <h2 id="form-title">Neue Bewerbung</h2>
+      <form id="f-app" novalidate>
+        <label for="a-firma">Firma</label><input id="a-firma" required autocomplete="off">
+        <label for="a-stelle">Stelle</label><input id="a-stelle" autocomplete="off">
+        <div class="grid2">
+          <div><label for="a-stufe">Stufe</label>
+            <select id="a-stufe"><option value="A">A, voll angepasst</option><option value="B" selected>B, teilweise</option><option value="C">C, Standard</option></select></div>
+          <div><label for="a-datum">Gesendet am</label><input id="a-datum" type="date"></div>
+        </div>
+        <label for="a-status">Status</label>
+        <select id="a-status"></select>
+        <label for="a-link">Link zur Anzeige</label><input id="a-link" type="url" inputmode="url" autocomplete="off" placeholder="https://">
+        <label for="a-person">Ansprechperson</label><input id="a-person" autocomplete="off">
+        <label for="a-lern">Lernpunkt</label><textarea id="a-lern" placeholder="Was nimmst du aus dieser Bewerbung mit?"></textarea>
+        <p class="small" id="f-msg" role="status" style="margin-top:8px"></p>
+        <div class="row" style="margin-top:8px"><button class="primary" type="submit" id="f-save">Bewerbung speichern</button><button type="button" class="quiet" id="f-cancel" hidden>Abbrechen</button></div>
+      </form>
+    </div>
+    <div class="block">
+      <div class="spread"><h2>Alle Bewerbungen</h2>
+        <select id="filter" aria-label="Filter" style="width:auto;padding:6px 8px;font-size:15px">
+          <option value="all">Alle</option><option value="open">Offen</option><option value="due">Nachfassen fällig</option><option value="talk">Gespräche</option>
+        </select></div>
+      <div id="app-list"></div>
+    </div>
+  </section>
+
+  <!-- WOCHE -->
+  <section class="view" id="v-woche" aria-labelledby="h-woche">
+    <div class="spread" style="margin-top:6px"><h1 id="h-woche">Woche</h1>
+      <select id="wk-sel" aria-label="Woche wählen" style="width:auto"></select></div>
+    <div class="block" id="wk-plan"></div>
+    <div class="block" id="wk-mix"></div>
+    <div class="block" id="wk-kpi"></div>
+    <div class="block">
+      <h2>Lernpunkte der Woche</h2>
+      <div id="wk-notes"></div>
+    </div>
+    <div class="block">
+      <h2>In den Standard übernehmen</h2>
+      <p class="small muted">Die eine Verbesserung, die ab nächster Woche fix gilt.</p>
+      <textarea id="wk-imp" aria-label="Verbesserung für den Standard"></textarea>
+    </div>
+    <div class="block">
+      <h2>Einstellungen</h2>
+      <label for="start">Erster Tag der Startwoche</label>
+      <input id="start" type="date">
+      <div class="row" style="margin-top:14px">
+        <button class="quiet" id="export">Sicherung herunterladen</button>
+        <button class="quiet" id="import-btn">Sicherung laden</button>
+        <input type="file" id="import" accept="application/json,.json" hidden>
+      </div>
+      <p class="small muted" style="margin-top:8px">Die Daten liegen nur auf diesem iPhone. Lade ab und zu eine Sicherung herunter, zum Beispiel in die Dateien-App.</p>
+      <div class="row" style="margin-top:14px">
+        <button class="danger" id="reset">Alle Daten löschen</button>
+      </div>
+      <p class="small" id="reset-msg" role="status"></p>
+    </div>
+  </section>
+  <p class="sync" id="sync" role="status">Wird geladen</p>
+</main>
+
+<div id="gate" class="gate" hidden role="dialog" aria-modal="true" aria-labelledby="gate-h">
+  <div class="gate-box">
+    <h2 id="gate-h">Die Kette ist gerissen</h2>
+    <p id="gate-txt"></p>
+    <button class="primary full" id="gate-btn">Wegklicken</button>
+    <button class="quiet full" id="gate-fix">Doch erledigt? Nachtragen</button>
+  </div>
+</div>
+
+<nav aria-label="Bereiche"><div class="in">
+  <button data-v="heute" aria-current="page">Heute</button>
+  <button data-v="kette">Kette</button>
+  <button data-v="bew">Bewerbungen</button>
+  <button data-v="woche">Woche</button>
+</div></nav>
+
+<script>
+(() => {
+  const START_TASKS = [
+    {t:"Die App aufs Handy laden: Link in Safari öffnen, Teilen, Zum Home-Bildschirm", m:"Den Link in Safari öffnen und einmal Heute antippen"},
+    {t:"Lebenslauf auf Deutsch", m:"Den Projekte-Abschnitt in Stichworten schreiben"},
+    {t:"Lebenslauf auf Englisch", m:"Den Projekte-Abschnitt ins Englische übertragen"},
+    {t:"Video des Minendetektors und README auf GitHub", m:"Eine Minute Video vom Roboter aufnehmen"},
+    {t:"Bausteinbibliothek aus den vier Anschreiben", m:"Die Einstiegsabsätze der vier Briefe in ein Dokument kopieren"},
+    {t:"Zeugnis-PDF, LinkedIn und Tracker", m:"Alle Zeugnisse in einen Ordner legen"},
+    {t:"Kandidaten für die Zielliste sammeln", m:"10 Firmen notieren"},
+    {t:"Kandidaten einstufen, Firmen für Woche 1 festlegen", m:"Die 10 Firmen für Woche 1 auswählen"}
+  ];
+  const OFF = START_TASKS.length;
+  const TOTAL = OFF + 70;
+  const WEEKS = [
+    {a:2,b:3,c:5,f:"Ablauf einschleifen; Aeolus und TU Wien sofort, weil zeitkritisch"},
+    {a:0,b:4,c:6,f:"Anzeigen schneller und genauer zerlegen"},
+    {a:2,b:4,c:4,f:"Vorher anrufen bei A- und B-Firmen"},
+    {a:2,b:4,c:4,f:"Zwei Einstiege testen und vergleichen"},
+    {a:2,b:4,c:4,f:"Lebenslauf-Varianten schärfen"},
+    {a:2,b:4,c:4,f:"Nachfassen konsequent umsetzen"},
+    {a:2,b:4,c:4,f:"Interview-Vorbereitung auf Basis der ersten Gespräche"},
+    {a:2,b:4,c:4,f:"Projektabsätze mit den besten Rückmeldungen überarbeiten"},
+    {a:1,b:2,c:7,f:"Initiativbewerbungen verstärken"},
+    {a:0,b:2,c:8,f:"Abschluss, offene Prozesse nachfassen, Bilanz ziehen"}
+  ];
+  const STATUS = [["sent","Gesendet"],["answer","Antwort erhalten"],["talk","Gespräch"],["offer","Angebot"],["reject","Absage"],["none","Keine Antwort"]];
+  const ST = Object.fromEntries(STATUS);
+  const WD = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+  const MO = ["Jänner","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+
+  const pad = n => String(n).padStart(2,"0");
+  const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const parse = s => { const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); };
+  const addDays = (s, n) => { const d = parse(s); d.setDate(d.getDate()+n); return ymd(d); };
+  const diff = (a, b) => Math.round((parse(b) - parse(a)) / 864e5);
+  const today = () => ymd(new Date());
+  const nice = s => { const d = parse(s); return `${WD[d.getDay()]}, ${d.getDate()}. ${MO[d.getMonth()]}`; };
+  const short = s => { const d = parse(s); return `${d.getDate()}.${d.getMonth()+1}.`; };
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
+  const uid = () => Math.random().toString(36).slice(2, 10);
+
+  let S = {start: today(), days: {}, apps: [], weeks: {}};
+  let editId = null;
+
+  /* ---------- storage ---------- */
+  const LS = "bewerbungskette-v1";
+  let db = null, docRef = null, saveTimer = null;
+  const sync = t => { document.getElementById("sync").textContent = t; };
+  function migrate(){
+    if (S.v !== 3) {
+      const used = (S.apps && S.apps.length) || Object.values(S.days || {}).some(d => d && d.status);
+      if (!used) S.start = "2026-10-16";
+      S.v = 3;
+    }
+    S.ack = S.ack || {};
+  }
+  function loadLocal(){ try { const r = localStorage.getItem(LS); if (r) S = Object.assign(S, JSON.parse(r)); } catch (e) {} migrate(); }
+  function saveLocal(){ try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) {} }
+  function save(){
+    saveLocal();
+    if (!docRef) { sync("Offline auf diesem iPhone gespeichert"); return; }
+    clearTimeout(saveTimer);
+    sync("Wird gespeichert");
+    saveTimer = setTimeout(async () => {
+      try { await docRef.set(JSON.parse(JSON.stringify(S))); sync("Gespeichert und synchronisiert"); }
+      catch (e) { sync("Nur auf diesem Gerät gespeichert, Synchronisierung fehlgeschlagen"); }
+    }, 600);
+  }
+  async function connect(){
+    try {
+      if (!window.claude || !window.claude.use) { sync("Auf diesem Gerät gespeichert"); return; }
+      const [d, u] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+      const id = u ? await u.id() : null;
+      if (!d || !id) { sync("Auf diesem Gerät gespeichert"); return; }
+      db = d; docRef = db.doc(`data/users/${id}/state`);
+      const snap = await docRef.get();
+      if (snap.exists) { S = Object.assign({start: today(), days: {}, apps: [], weeks: {}}, snap.data()); const before = S.v; migrate(); saveLocal(); if (before !== S.v) await docRef.set(JSON.parse(JSON.stringify(S))); render(); gate(); sync("Synchronisiert"); }
+      else { await docRef.set(JSON.parse(JSON.stringify(S))); sync("Synchronisiert"); }
+    } catch (e) { sync("Auf diesem Gerät gespeichert"); }
+  }
+
+  /* ---------- plan logic ---------- */
+  const idxOf = s => diff(S.start, s);
+  const dateOf = i => addDays(S.start, i);
+  const weekOfIdx = i => i < OFF ? 0 : Math.floor((i - OFF) / 7) + 1;
+  const weekStart = w => w === 0 ? 0 : OFF + 7 * (w - 1);
+  const weekEnd = w => w === 0 ? OFF - 1 : weekStart(w) + 6;
+  function dayType(i){
+    if (i < 0 || i >= TOTAL) return null;
+    if (i < OFF) return {kind:"start", task: START_TASKS[i].t, min: START_TASKS[i].m};
+    const dow = parse(dateOf(i)).getDay();
+    if (dow === 6) return {kind:"review", task:"Woche auswerten und eine Verbesserung in den Standard übernehmen", min:"Tracker ansehen, einen Lernpunkt notieren"};
+    if (dow === 0) return {kind:"plan", task:"2–3 Firmen für nächste Woche recherchieren und einstufen, Nachfragen vorbereiten", min:"Eine Firma recherchieren"};
+    return {kind:"apps", task:"2 Bewerbungen nach dem Standardprozess", min:"Eine C-Bewerbung"};
+  }
+  const stateOf = i => { const d = S.days[dateOf(i)]; return d && d.status ? d.status : null; };
+  function cls(i){
+    const t = idxOf(today()), st = stateOf(i);
+    if (st === "done") return "done";
+    if (st === "min") return "min";
+    if (i < t) return "miss";
+    return i === t ? "open" : "future";
+  }
+  function streaks(){
+    const t = Math.min(idxOf(today()), TOTAL - 1);
+    let cur = 0, i = t;
+    if (i >= 0 && !stateOf(i)) i--;
+    while (i >= 0 && stateOf(i)) { cur++; i--; }
+    let best = 0, run = 0, total = 0;
+    for (let k = 0; k < TOTAL; k++) { if (stateOf(k)) { run++; total++; best = Math.max(best, run); } else run = 0; }
+    return {cur, best, total};
+  }
+  const appWeek = a => a.datum ? weekOfIdx(idxOf(a.datum)) : 0;
+  const isDue = a => a.status === "sent" && a.datum && diff(a.datum, today()) >= 14;
+
+  function setDay(date, status){
+    const d = S.days[date] || {};
+    if (status) d.status = status; else delete d.status;
+    S.days[date] = d; save();
+  }
+
+  /* ---------- render ---------- */
+  function renderHeute(){
+    const t = today(), i = idxOf(t), dt = dayType(i), st = streaks();
+    document.getElementById("today-date").textContent = nice(t);
+    document.getElementById("streak").textContent = st.cur;
+    document.getElementById("streak-label").textContent = st.cur === 1 ? "Glied in Folge" : "Glieder in Folge";
+    const strip = document.getElementById("strip"); strip.innerHTML = "";
+    for (let k = Math.max(0, Math.min(i, TOTAL-1) - 13); k <= Math.min(Math.max(i,0) + 6, TOTAL - 1) && strip.children.length < 21; k++) {
+      const s = document.createElement("span"); const c = cls(k);
+      if (c === "done" || c === "min" || c === "miss") s.className = c;
+      if (k === i) s.classList.add("today");
+      strip.appendChild(s);
+    }
+    const dayOf = document.getElementById("day-of");
+    const card = document.getElementById("today-card");
+    const warn = document.getElementById("warn"); warn.innerHTML = "";
+    if (i < 0) {
+      dayOf.textContent = `Die Kette beginnt am ${nice(S.start)}.`;
+      card.innerHTML = `<h2>Noch nicht gestartet</h2><p class="muted">Der erste Tag der Startwoche ist der ${esc(nice(S.start))}. Du kannst ihn unter Woche › Einstellungen ändern.</p><button class="primary full" id="start-now">Heute starten</button>`;
+      document.getElementById("start-now").onclick = () => { S.start = today(); save(); render(); };
+      document.getElementById("week-card").innerHTML = "";
+      return;
+    }
+    if (i >= TOTAL) {
+      dayOf.textContent = `Alle ${TOTAL} Tage sind vorbei.`;
+      card.innerHTML = `<h2>Die zehn Wochen sind geschafft</h2><p class="muted">${st.total} von ${TOTAL} Gliedern erledigt, ${S.apps.length} Bewerbungen. Zieh in der Wochenansicht Bilanz.</p>`;
+      document.getElementById("week-card").innerHTML = "";
+      return;
+    }
+    const w = weekOfIdx(i);
+    dayOf.textContent = `Tag ${i + 1} von ${TOTAL} · ${w === 0 ? "Startwoche" : "Woche " + w + " von 10"}`;
+    if (i > 0 && !stateOf(i - 1)) {
+      warn.innerHTML = `<div class="notice">Gestern blieb das Glied offen. Heute ist der wichtigste Tag: nie zwei Tage hintereinander.</div>`;
+    }
+    const cur = stateOf(i);
+    if (!cur && new Date().getHours() >= 20) {
+      warn.innerHTML += `<div class="notice">Es ist nach 20 Uhr und das Glied ist noch offen. Die Mindestversion reicht: ${esc(dt.min)}.</div>`;
+    }
+    let extra = "";
+    if (dt.kind === "apps") {
+      const n = S.apps.filter(a => a.datum === t).length;
+      extra = `<div class="counter" style="margin:12px 0"><span class="num n">${n}</span><span class="muted">von 2 Bewerbungen heute eingetragen</span></div>`;
+    }
+    card.innerHTML = `
+      <div class="spread"><h2 style="margin:0">Heutiges Kettenglied</h2>${cur ? `<span class="ok">${cur === "done" ? "Erledigt" : "Mindestversion"}</span>` : ""}</div>
+      <p class="task">${esc(dt.task)}</p>
+      <p class="small muted">Mindestversion für schlechte Tage: ${esc(dt.min)}</p>
+      ${extra}
+      <div class="stack" style="margin-top:12px">
+        ${cur === "done" ? `<button class="quiet full" data-set="">Erledigt zurücknehmen</button>` : `<button class="primary full" data-set="done">Kettenglied erledigt</button>`}
+        ${cur === "min" ? `<button class="quiet full" data-set="">Mindestversion zurücknehmen</button>` : (cur === "done" ? "" : `<button class="full" data-set="min">Mindestversion erledigt</button>`)}
+        ${dt.kind === "apps" ? `<button class="quiet full" id="go-add">Bewerbung eintragen</button>` : ""}
+      </div>`;
+    card.querySelectorAll("[data-set]").forEach(b => b.onclick = () => { setDay(t, b.dataset.set || null); render(); if (b.dataset.set) pulse(i); });
+    const ga = document.getElementById("go-add"); if (ga) ga.onclick = () => { show("bew"); document.getElementById("a-firma").focus(); };
+    const ev = document.getElementById("evening");
+    if (document.activeElement !== ev) ev.value = (S.days[t] && S.days[t].note) || "";
+    const wc = document.getElementById("week-card");
+    if (w === 0) wc.innerHTML = `<h2>Startwoche</h2><p class="muted">Jeden Tag ein Baustein für das Fundament. Ab Woche 1 folgen die Bewerbungen.</p>`;
+    else {
+      const W = WEEKS[w - 1], mine = S.apps.filter(a => appWeek(a) === w);
+      const c = k => mine.filter(a => a.stufe === k).length;
+      wc.innerHTML = `<h2>Woche ${w}</h2><p><b>Fokus:</b> ${esc(W.f)}</p>
+        <table><tr><th></th><th>A</th><th>B</th><th>C</th><th>Summe</th></tr>
+        <tr><td class="muted">Ziel</td><td>${W.a}</td><td>${W.b}</td><td>${W.c}</td><td>10</td></tr>
+        <tr><td class="muted">Bisher</td><td>${c("A")}</td><td>${c("B")}</td><td>${c("C")}</td><td>${mine.length}</td></tr></table>`;
+    }
+  }
+  function pulse(i){ /* animation hook for chain view */ S._just = i; }
+
+  function renderKette(){
+    const st = streaks();
+    document.getElementById("s-cur").textContent = st.cur;
+    document.getElementById("s-best").textContent = st.best;
+    document.getElementById("s-total").textContent = st.total;
+    const ch = document.getElementById("chain"); ch.innerHTML = "";
+    const t = idxOf(today());
+    for (let w = 0; w <= 10; w++) {
+      const h = document.createElement("div"); h.className = "wk";
+      h.textContent = w === 0 ? `Startwoche, ab ${short(S.start)}` : `Woche ${w}, ab ${short(dateOf(weekStart(w)))}`;
+      ch.appendChild(h);
+      for (let k = weekStart(w); k <= weekEnd(w); k++) {
+        const b = document.createElement("button"); const c = cls(k);
+        b.className = "lk " + c + (k === t ? " today" : "") + (S._just === k ? " just" : "");
+        b.textContent = parse(dateOf(k)).getDate();
+        b.setAttribute("aria-label", `${nice(dateOf(k))}: ${c === "done" ? "erledigt" : c === "min" ? "Mindestversion" : c === "miss" ? "ausgelassen" : c === "open" ? "heute offen" : "kommt noch"}`);
+        if (k > t) b.disabled = true; else b.onclick = () => openDay(k);
+        ch.appendChild(b);
+      }
+    }
+    S._just = null;
+  }
+  function openDay(k){
+    const box = document.getElementById("day-edit"), date = dateOf(k), dt = dayType(k), cur = stateOf(k);
+    box.hidden = false;
+    box.innerHTML = `<h2>${esc(nice(date))}</h2><p class="task">${esc(dt.task)}</p><p class="small muted">Mindestversion: ${esc(dt.min)}</p>
+      <div class="stack"><button class="primary full" data-s="done">Als erledigt markieren</button>
+      <button class="full" data-s="min">Als Mindestversion markieren</button>
+      <button class="quiet full" data-s="">Offen lassen</button></div>
+      ${S.days[date] && S.days[date].note ? `<p class="small" style="margin-top:12px"><b>Abendfrage:</b> ${esc(S.days[date].note)}</p>` : ""}`;
+    box.querySelectorAll("[data-s]").forEach(b => { if (b.dataset.s === (cur || "")) b.setAttribute("aria-pressed","true");
+      b.onclick = () => { setDay(date, b.dataset.s || null); box.hidden = true; render(); }; });
+    box.scrollIntoView({block:"nearest"});
+  }
+
+  function renderBew(){
+    document.getElementById("b-count").textContent = `${S.apps.length}/100`;
+    const goal = {A:15,B:35,C:50};
+    document.getElementById("tiers").innerHTML = ["A","B","C"].map(k => {
+      const n = S.apps.filter(a => a.stufe === k).length;
+      return `<div><div class="spread"><b>Stufe ${k}</b><span class="num" style="font-size:20px">${n}/${goal[k]}</span></div><div class="bar"><b style="width:${Math.min(100, n / goal[k] * 100)}%"></b></div></div>`;
+    }).join("");
+    const f = document.getElementById("filter").value;
+    let list = S.apps.slice().sort((a, b) => (b.datum || "").localeCompare(a.datum || ""));
+    if (f === "open") list = list.filter(a => a.status === "sent" || a.status === "answer");
+    if (f === "due") list = list.filter(isDue);
+    if (f === "talk") list = list.filter(a => a.status === "talk" || a.status === "offer");
+    const el = document.getElementById("app-list");
+    if (!list.length) { el.innerHTML = `<p class="muted" style="margin-top:8px">${S.apps.length ? "Keine Bewerbung passt zu diesem Filter." : "Noch keine Bewerbung eingetragen. Die erste kommt mit Woche 1, zeitkritische wie Aeolus auch früher."}</p>`; return; }
+    el.innerHTML = list.map(a => `<div class="app">
+      <div class="spread"><span class="t">${esc(a.firma)}</span><span class="chip ${a.stufe}">Stufe ${esc(a.stufe)}</span></div>
+      <div class="small muted">${esc(a.stelle || "Ohne Stellenbezeichnung")}${a.datum ? " · " + short(a.datum) : ""}${appWeek(a) ? " · Woche " + appWeek(a) : ""}</div>
+      ${isDue(a) ? `<div style="margin-top:6px"><span class="chip due">Nachfassen fällig</span></div>` : ""}
+      ${a.lern ? `<div class="small" style="margin-top:6px">${esc(a.lern)}</div>` : ""}
+      <div class="row" style="margin-top:8px">
+        <select data-st="${a.id}" aria-label="Status für ${esc(a.firma)}">${STATUS.map(([v, l]) => `<option value="${v}" ${a.status === v ? "selected" : ""}>${l}</option>`).join("")}</select>
+        ${a.link && /^https?:\/\//i.test(a.link) ? `<a class="small" href="${esc(a.link)}" target="_blank" rel="noopener">Anzeige</a>` : ""}
+        <button class="quiet" data-ed="${a.id}" style="min-height:40px;padding:6px 12px">Bearbeiten</button>
+      </div></div>`).join("");
+    el.querySelectorAll("[data-st]").forEach(s => s.onchange = () => { const a = S.apps.find(x => x.id === s.dataset.st); a.status = s.value; save(); render(); });
+    el.querySelectorAll("[data-ed]").forEach(b => b.onclick = () => startEdit(b.dataset.ed));
+  }
+  const F = id => document.getElementById(id);
+  function resetForm(){
+    editId = null; F("f-app").reset(); F("a-datum").value = today(); F("a-stufe").value = "B"; F("a-status").value = "sent";
+    F("form-title").textContent = "Neue Bewerbung"; F("f-save").textContent = "Bewerbung speichern"; F("f-cancel").hidden = true;
+  }
+  function startEdit(id){
+    const a = S.apps.find(x => x.id === id); if (!a) return;
+    editId = id; F("a-firma").value = a.firma; F("a-stelle").value = a.stelle || ""; F("a-stufe").value = a.stufe;
+    F("a-datum").value = a.datum || ""; F("a-status").value = a.status; F("a-link").value = a.link || ""; F("a-person").value = a.person || ""; F("a-lern").value = a.lern || "";
+    F("form-title").textContent = "Bewerbung bearbeiten"; F("f-save").textContent = "Änderungen speichern"; F("f-cancel").hidden = false;
+    F("f-app").scrollIntoView({block:"start"}); F("a-firma").focus();
+  }
+
+  function renderWoche(){
+    const sel = F("wk-sel");
+    if (!sel.options.length) { for (let w = 1; w <= 10; w++) sel.add(new Option(`Woche ${w}`, w)); const cw = weekOfIdx(idxOf(today())); sel.value = Math.min(10, Math.max(1, cw || 1)); }
+    const w = Number(sel.value), W = WEEKS[w - 1];
+    const s0 = dateOf(weekStart(w)), s1 = dateOf(weekEnd(w));
+    F("wk-plan").innerHTML = `<h2>Plan</h2><p class="small muted">${short(s0)} bis ${short(s1)}</p><p><b>Fokus:</b> ${esc(W.f)}</p>`;
+    const mine = S.apps.filter(a => appWeek(a) === w), c = k => mine.filter(a => a.stufe === k).length;
+    F("wk-mix").innerHTML = `<h2>Mischung</h2><table><tr><th></th><th>A</th><th>B</th><th>C</th><th>Summe</th></tr>
+      <tr><td class="muted">Ziel</td><td>${W.a}</td><td>${W.b}</td><td>${W.c}</td><td>10</td></tr>
+      <tr><td class="muted">Ist</td><td>${c("A")}</td><td>${c("B")}</td><td>${c("C")}</td><td>${mine.length}</td></tr></table>`;
+    const q = arr => { const n = arr.length; if (!n) return "–";
+      const ans = arr.filter(a => a.status !== "sent" && a.status !== "none").length, talk = arr.filter(a => a.status === "talk" || a.status === "offer").length;
+      return `${Math.round(ans / n * 100)} % / ${Math.round(talk / n * 100)} %`; };
+    F("wk-kpi").innerHTML = `<h2>Kennzahlen</h2><p class="small muted">Antwortquote / Gesprächsquote</p>
+      <table><tr><th>Bereich</th><th>Diese Woche</th><th>Gesamt</th></tr>
+      <tr><td>Alle</td><td>${q(mine)}</td><td>${q(S.apps)}</td></tr>
+      ${["A","B","C"].map(k => `<tr><td>Stufe ${k}</td><td>${q(mine.filter(a => a.stufe === k))}</td><td>${q(S.apps.filter(a => a.stufe === k))}</td></tr>`).join("")}</table>
+      <p class="small muted" style="margin-top:8px">Antworten kommen oft erst nach zwei bis sechs Wochen. Schau ältere Wochen deshalb regelmäßig erneut an.</p>`;
+    const notes = [];
+    for (let k = weekStart(w); k <= weekEnd(w); k++) { const d = S.days[dateOf(k)]; if (d && d.note) notes.push(`<p class="small"><b>${short(dateOf(k))}</b> ${esc(d.note)}</p>`); }
+    mine.filter(a => a.lern).forEach(a => notes.push(`<p class="small"><b>${esc(a.firma)}</b> ${esc(a.lern)}</p>`));
+    F("wk-notes").innerHTML = notes.length ? notes.join("") : `<p class="muted small">Noch keine Lernpunkte. Sie kommen aus der Abendfrage und den Bewerbungen dieser Woche.</p>`;
+    const imp = F("wk-imp"); if (document.activeElement !== imp) imp.value = S.weeks[w] || "";
+    const st = F("start"); if (document.activeElement !== st) st.value = S.start;
+  }
+
+  function render(){ renderHeute(); renderKette(); renderBew(); renderWoche(); }
+
+  /* ---------- gerissene Kette: zehnmal wegklicken ---------- */
+  function missed(){
+    const t = idxOf(today()), out = [];
+    for (let k = 0; k < Math.min(t, TOTAL); k++) { const d = dateOf(k); if (!stateOf(k) && !S.ack[d]) out.push(k); }
+    return out;
+  }
+  function gate(){
+    const g = F("gate"), m = missed();
+    if (!m.length) { g.hidden = true; return; }
+    const k = m[m.length - 1]; let left = 10;
+    F("gate-txt").innerHTML = `${m.length === 1 ? "Am" : "Zuletzt am"} <b>${esc(nice(dateOf(k)))}</b> blieb das Glied offen: ${esc(dayType(k).task)}.${m.length > 1 ? ` Insgesamt ${m.length} offene Tage.` : ""} Heute zählt doppelt.`;
+    const b = F("gate-btn"), lab = () => { b.textContent = `Wegklicken (noch ${left})`; };
+    lab(); g.hidden = false; b.focus();
+    b.onclick = () => {
+      left--;
+      if (left > 0) { lab(); b.style.marginLeft = (left % 2 ? "18px" : "0"); return; }
+      m.forEach(i => { S.ack[dateOf(i)] = true; }); save(); g.hidden = true; b.style.marginLeft = "0"; render();
+    };
+    F("gate-fix").onclick = () => { g.hidden = true; show("kette"); render(); openDay(k); };
+  }
+
+  /* ---------- navigation ---------- */
+  function show(v){
+    document.querySelectorAll("section.view").forEach(s => s.classList.toggle("on", s.id === "v-" + v));
+    document.querySelectorAll("nav button").forEach(b => b.dataset.v === v ? b.setAttribute("aria-current","page") : b.removeAttribute("aria-current"));
+    window.scrollTo(0, 0);
+  }
+  document.querySelectorAll("nav button").forEach(b => b.onclick = () => { show(b.dataset.v); render(); });
+
+  /* ---------- events ---------- */
+  F("a-status").innerHTML = STATUS.map(([v, l]) => `<option value="${v}">${l}</option>`).join("");
+  resetForm();
+  F("f-app").addEventListener("submit", e => {
+    e.preventDefault();
+    const firma = F("a-firma").value.trim();
+    if (!firma) { F("f-msg").textContent = "Trag zuerst den Namen der Firma ein."; F("a-firma").focus(); return; }
+    const data = {firma, stelle: F("a-stelle").value.trim(), stufe: F("a-stufe").value, datum: F("a-datum").value || today(),
+      status: F("a-status").value, link: F("a-link").value.trim(), person: F("a-person").value.trim(), lern: F("a-lern").value.trim()};
+    if (editId) { Object.assign(S.apps.find(a => a.id === editId), data); F("f-msg").textContent = "Änderungen gespeichert."; }
+    else { S.apps.push(Object.assign({id: uid()}, data)); F("f-msg").textContent = `Bewerbung bei ${firma} gespeichert.`; }
+    save(); resetForm(); render();
+  });
+  F("f-cancel").onclick = () => { resetForm(); F("f-msg").textContent = ""; };
+  F("filter").onchange = renderBew;
+  F("wk-sel").onchange = renderWoche;
+  let evT = null;
+  F("evening").addEventListener("input", e => { const t = today(); clearTimeout(evT); evT = setTimeout(() => { const d = S.days[t] || {}; d.note = e.target.value; S.days[t] = d; save(); }, 500); });
+  let wkT = null;
+  F("wk-imp").addEventListener("input", e => { const w = Number(F("wk-sel").value); clearTimeout(wkT); wkT = setTimeout(() => { S.weeks[w] = e.target.value; save(); }, 500); });
+  F("start").addEventListener("change", e => { if (e.target.value) { S.start = e.target.value; save(); F("wk-sel").innerHTML = ""; render(); } });
+  let armed = false;
+  F("reset").onclick = () => {
+    if (!armed) { armed = true; F("reset").textContent = "Wirklich alles löschen"; F("reset-msg").textContent = "Noch einmal tippen, um Kette und Bewerbungen endgültig zu löschen."; setTimeout(() => { armed = false; F("reset").textContent = "Alle Daten löschen"; F("reset-msg").textContent = ""; }, 5000); return; }
+    S = {start: today(), days: {}, apps: [], weeks: {}}; save(); armed = false; F("reset").textContent = "Alle Daten löschen"; F("reset-msg").textContent = "Alle Daten gelöscht."; F("wk-sel").innerHTML = ""; render();
+  };
+  F("export").onclick = () => {
+    const blob = new Blob([JSON.stringify(S, null, 2)], {type: "application/json"});
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `bewerbungskette-${today()}.json`;
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    F("reset-msg").textContent = "Sicherung erstellt.";
+  };
+  F("import-btn").onclick = () => F("import").click();
+  F("import").onchange = e => {
+    const file = e.target.files && e.target.files[0]; if (!file) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try { const d = JSON.parse(r.result); if (!d || !Array.isArray(d.apps) || typeof d.days !== "object") throw 0;
+        S = Object.assign({start: today(), days: {}, apps: [], weeks: {}}, d); migrate(); save(); F("wk-sel").innerHTML = ""; render(); gate();
+        F("reset-msg").textContent = "Sicherung geladen.";
+      } catch (err) { F("reset-msg").textContent = "Diese Datei ist keine gültige Sicherung der Bewerbungskette."; }
+      e.target.value = "";
+    };
+    r.readAsText(file);
+  };
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) { render(); gate(); } });
+
+  /* ---------- start ---------- */
+  const sr = document.createElement("style"); sr.textContent = ".sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}"; document.head.appendChild(sr);
+  loadLocal(); render(); gate(); sync("Offline auf diesem iPhone gespeichert");
+  if ("serviceWorker" in navigator) { window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); }); }
+})();
+</script>
+</body>
+</html>
